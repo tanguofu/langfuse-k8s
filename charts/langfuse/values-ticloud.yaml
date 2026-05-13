@@ -1,0 +1,71 @@
+# ti-cloud overlay for langfuse chart.
+#
+# This file is COMMITTED to the repo (no secrets inside).
+# Secret values live in ./.env.token and are injected at install time
+# via `install.sh` using `--set` overrides.
+
+langfuse:
+  nextauth:
+    url: http://langfuse.jmpti.woa.com
+    # secret.value set from $NEXTAUTH_SECRET via install.sh
+  features:
+    signUpDisabled: false   # flip to true after first admin signs up
+    telemetryEnabled: false # do not phone home to langfuse.com
+  web:
+    service:
+      type: ClusterIP
+      port: 3000
+
+# ───────────── External PostgreSQL ─────────────
+postgresql:
+  deploy: false
+  # host / auth.username / auth.password / auth.database set from env via install.sh
+  port: 5432
+
+# ───────────── Redis (valkey subchart) ─────────────
+redis:
+  deploy: true
+  # auth.password set from env via install.sh
+  image:
+    repository: bitnamilegacy/valkey
+  primary:
+    # Tencent CBS minimum disk size is 10Gi; chart default 8Gi fails provisioning.
+    persistence:
+      enabled: true
+      storageClass: cbs-ssd-sc
+      size: 10Gi
+    extraFlags:
+      - "--maxmemory-policy noeviction"
+
+# ───────────── ClickHouse (subchart) ─────────────
+clickhouse:
+  deploy: true
+  # auth.password set from env via install.sh
+  # migration.url set from env via install.sh (go-migrate driver needs creds in the URL)
+  image:
+    repository: bitnamilegacy/clickhouse
+  zookeeper:
+    image:
+      repository: bitnamilegacy/zookeeper
+    persistence:
+      enabled: true
+      storageClass: cbs-ssd-sc
+      size: 10Gi
+  persistence:
+    enabled: true
+    storageClass: cbs-ssd-sc
+    size: 50Gi
+
+# ───────────── Object storage → Tencent Cloud COS ─────────────
+s3:
+  deploy: false          # no bundled MinIO
+  storageProvider: s3
+  # bucket / region / endpoint / creds set from env via install.sh
+  forcePathStyle: false  # COS uses virtual-hosted style
+  eventUpload:
+    prefix: events/
+  mediaUpload:
+    prefix: media/
+  batchExport:
+    enabled: true
+    prefix: exports/

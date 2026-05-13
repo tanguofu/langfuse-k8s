@@ -116,3 +116,12 @@ fabric.properties
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,intellij+all,helm
+# Local-only secrets (DO NOT COMMIT)
+.env.token
+.env.token.*
+values-ticloud.local.yaml
+
+# Local-only secrets (DO NOT COMMIT)
+.env.token
+.env.token.*
+values-ticloud.local.yaml
